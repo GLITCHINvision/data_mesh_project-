@@ -1,0 +1,15 @@
+name: "dbt_sales_domain"
+version: "1.0.0"
+config-version: 2
+
+profile: "default"
+
+model-paths: ["models"]
+
+models:
+  dbt_sales_domain:
+    +materialized: view
+    staging:
+      +schema: sales_raw
+    sales_data_product:
+      +schema: analytics_sales

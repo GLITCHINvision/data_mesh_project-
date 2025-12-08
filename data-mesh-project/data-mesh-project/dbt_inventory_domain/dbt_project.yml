@@ -1,0 +1,15 @@
+name: "dbt_inventory_domain"
+version: "1.0.0"
+config-version: 2
+
+profile: "default"
+
+model-paths: ["models"]
+
+models:
+  dbt_inventory_domain:
+    +materialized: view
+    staging:
+      +schema: inventory_raw
+    inventory_data_product:
+      +schema: analytics_inventory

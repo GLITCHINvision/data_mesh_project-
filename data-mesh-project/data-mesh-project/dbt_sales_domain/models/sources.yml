@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: sales_raw
+    schema: sales_raw
+    description: "Raw source data for sales domain"
+    tables:
+      - name: orders
+        description: "Raw e-commerce orders"

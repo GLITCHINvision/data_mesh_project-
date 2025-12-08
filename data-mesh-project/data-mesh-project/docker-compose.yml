@@ -1,0 +1,81 @@
+version: '3.8'
+
+x-airflow-common: &airflow-common
+  image: custom-airflow
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    # Project specific env vars
+    POSTGRES_CONN_STRING: "postgresql://dbt_user:dbt_password@postgres:5432/data_mesh"
+    DBT_HOST: "postgres"
+    DBT_USER: "dbt_user"
+    DBT_PASSWORD: "dbt_password"
+  volumes:
+    - ${AIRFLOW_PROJ_DIR:-.}/airflow_dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt_inventory_domain:/opt/dbt/dbt_inventory_domain
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt_sales_domain:/opt/dbt/dbt_sales_domain
+    - ${AIRFLOW_PROJ_DIR:-.}/postgres_setup:/opt/postgres_setup
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on: &airflow-common-depends-on
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+      # We will create the data_mesh db and users via init script if needed,
+      # but simpler here: we use a separate init mechanism or just one DB.
+      # For simplicity in this demo, we'll let airflow use its db, 
+      # and we create a separate user/db for data-mesh via an init container or 
+      # just use the same postgres instance with a custom init script.
+      # Let's map the postgres_setup scripts to /docker-entrypoint-initdb.d
+      # Note: postgres image runs scripts in /docker-entrypoint-initdb.d automatically
+      # BUT we need to be careful not to mess up Airflow's DB if we use the same user.
+      # Strategy: Use root postgres user to create dbt_user and data_mesh db.
+      POSTGRES_MULTIPLE_DATABASES: "data_mesh" # Only works with specific images, standard postgres doesn't support this env var out of box.
+    volumes:
+      # We'll use a custom init script to ensure dbt_user and data_mesh db exist
+      - ./postgres_setup_docker:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "airflow" ]
+      interval: 5s
+      retries: 5
+    restart: always
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    restart: always
+
+  airflow-init:
+    <<: *airflow-common
+    command: version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+    user: "0:0"
+    depends_on:
+      postgres:
+        condition: service_healthy

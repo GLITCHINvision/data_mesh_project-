@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: fact_daily_sales
+    description: "Daily sales metrics per product."
+    columns:
+      - name: order_date
+        description: "Date of the order."
+        tests:
+          - not_null
+      - name: product_id
+        description: "ID of the product."
+        tests:
+          - not_null
+      - name: total_revenue
+        description: "Total revenue for that day and product."
+        tests:
+          - not_null

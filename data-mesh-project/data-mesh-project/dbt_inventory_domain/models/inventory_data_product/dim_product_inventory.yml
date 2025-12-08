@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: dim_product_inventory
+    description: "Current inventory status by product."
+    columns:
+      - name: product_id
+        description: "Product identifier"
+        tests:
+          - unique
+          - not_null
+      - name: is_low_stock
+        description: "Flag if stock is at or below reorder level."

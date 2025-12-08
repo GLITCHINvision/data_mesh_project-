@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: inventory_raw
+    schema: inventory_raw
+    description: "Raw source data for inventory domain"
+    tables:
+      - name: products
+        description: "Raw product catalog and inventory levels"
