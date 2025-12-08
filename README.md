@@ -1,234 +1,84 @@
- Data Mesh Architecture with dbt, Airflow & Docker
+ # Data Mesh Architecture with dbt, Airflow and Docker
 
-This project demonstrates a simplified Data Mesh architecture where multiple data domains independently own, transform, and publish their own data products using dbt, while Apache Airflow automates pipelines and PostgreSQL stores the data. The entire stack is containerized using Docker.
+This project implements a simplified Data Mesh architecture where multiple data domains independently own, transform, and publish their own data products using dbt. Apache Airflow is used for orchestration, PostgreSQL for storage, and the entire system is containerized using Docker.
 
-This project is designed to showcase modern data engineering architecture used in real-world enterprises.
+## Project Overview
 
- Key Features
+The project simulates two independent business domains:
+- Sales Domain
+- Inventory Domain
 
- Domain-driven data ownership (Sales & Inventory)
+Each domain manages its own raw data, transformation logic, and final analytics tables without relying on a centralized data engineering team.
 
- Independent dbt projects per domain
+## Tech Stack
 
- Automated pipelines using Apache Airflow
+- PostgreSQL: Raw and analytics data storage  
+- dbt (Data Build Tool): Data transformation, testing, documentation  
+- Apache Airflow: Pipeline orchestration and scheduling  
+- Docker and Docker Compose: Containerized deployment  
+- SQL: Data modeling and transformations  
+- Python: Airflow DAGs  
 
- Raw → Staging → Analytics transformation layers
+## Architecture Flow
 
- Containerized deployment with Docker Compose
+Raw Data in PostgreSQL  
+→ Domain-level dbt transformations  
+→ Analytics data products  
+→ Airflow orchestration  
+→ Consumption by BI tools and analysts  
 
- Production-style folder structure
+## Data Products
 
- Ready for metadata tools like DataHub / Amundsen
+Sales Domain:
+- fact_daily_sales: Daily product-level sales revenue and quantities
 
- Architecture Overview
+Inventory Domain:
+- dim_product_inventory: Current stock, reorder levels, and low-stock flag
 
-Domains:
+## Folder Structure
 
-Sales Domain
-
-Inventory Domain
-
-Flow:
-
-Raw Data (Postgres)
-        ↓
-Domain-Level dbt Transformations
-        ↓
-Analytics Data Products
-        ↓
-Airflow Orchestration
-        ↓
-BI / Business Consumption
-
-
-Each domain owns:
-
-Its raw data
-
-Its dbt transformations
-
-Its analytics schema
-
-Its Airflow pipeline
-
-🛠️ Tech Stack
-Technology	Purpose
-PostgreSQL	Raw + Analytics Data Storage
-dbt	Data Transformation, Testing & Documentation
-Apache Airflow	Pipeline Scheduling & Orchestration
-Docker & Docker Compose	Containerized Deployment
-SQL	Data Modeling
-Python	Airflow DAGs
- Project Structure
 data-mesh-project/
-│
-├── airflow_dags/
-│   ├── sales_pipeline_dag.py
-│   └── inventory_pipeline_dag.py
-│
-├── dbt_sales_domain/
-│   ├── models/
-│   │   ├── staging/
-│   │   └── sales_data_product/
-│
-├── dbt_inventory_domain/
-│   ├── models/
-│   │   ├── staging/
-│   │   └── inventory_data_product/
-│
-├── postgres_setup/
-│   ├── 01_setup_schemas.sql
-│   └── 02_seed_raw_data.sql
-│
-├── docker-compose.yml
-├── Dockerfile
-└── README.md
+- airflow_dags/
+- dbt_sales_domain/
+- dbt_inventory_domain/
+- postgres_setup/
+- docker-compose.yml
+- Dockerfile
 
- How the Project Works
-1️ Raw Data Layer (Postgres)
+## How It Works
 
-Sales data → sales_raw.orders
+1. Raw sales and inventory data are stored in PostgreSQL schemas.
+2. Each domain uses its own dbt project to transform raw data into analytics-ready tables.
+3. Apache Airflow runs and schedules dbt pipelines using domain-specific DAGs.
+4. Final data products are stored in analytics schemas and are ready for reporting and analysis.
 
-Inventory data → inventory_raw.products
+## How to Run
 
-2️ Transformation Layer (dbt)
+1. Install Docker Desktop.
+2. From the project root, run:
+   docker-compose up -d --build
+3. Open Airflow at:
+   http://localhost:8080
+4. Login with:
+   Username: airflow  
+   Password: airflow  
+5. Enable and trigger:
+   - sales_pipeline_dag  
+   - inventory_pipeline_dag  
 
-Sales creates:
+## Output Tables
 
-fact_daily_sales
+- analytics_sales.fact_daily_sales  
+- analytics_inventory.dim_product_inventory  
 
-Inventory creates:
+These tables can be used directly for dashboards, reporting, and business analysis.
 
-dim_product_inventory
+## Purpose of the Project
 
-Each domain owns its own:
+This project demonstrates domain-driven data ownership, decentralized transformations, automated orchestration, and production-style data engineering architecture aligned with modern Data Mesh principles.
 
-dbt project
+## Author
 
-tests
-
-documentation
-
-deployment lifecycle
-
-3️ Orchestration Layer (Airflow)
-
-sales_pipeline_dag runs dbt for Sales
-
-inventory_pipeline_dag runs dbt for Inventory
-
-Pipelines can be triggered manually or scheduled
-
-4️ Consumption Layer
-
-Data is consumed by:
-
-BI tools
-
-Analysts
-
-Business stakeholders
-
- Running the Project with Docker
-1️ Start Docker Desktop
-
-Make sure Docker Desktop is installed and running.
-
-2️ Build & Start the Stack
-
-Run this in the project root:
-
-docker-compose up -d --build
-
-3️ Verify Running Containers
-docker ps
-
-
-You should see:
-
-data-mesh-postgres
-
-data-mesh-airflow-webserver
-
-data-mesh-airflow-scheduler
-
-4️ Access Airflow UI
-
-Open in browser:
-
-http://localhost:8080
-
-
-Login:
-
-Username: airflow
-
-Password: airflow
-
-5️ Run Pipelines
-
-Enable sales_pipeline_dag
-
-Enable inventory_pipeline_dag
-
-Trigger both DAGs ▶
-
-Once successful, analytics tables will be created in Postgres.
-
- Sample Output Tables
-
-analytics_sales.fact_daily_sales
-
-analytics_inventory.dim_product_inventory
-
-These tables can be used directly in:
-
-Power BI
-
-Tableau
-
-Python analytics
-
-Business reports
-
- Why Data Mesh?
-
-Traditional centralized data teams create engineering bottlenecks.
-This project solves that by:
-
-Decentralizing ownership
-
-Enabling self-service analytics
-
-Scaling transformations independently
-
-Improving data quality & accountability
-
- Use Cases
-
-Daily sales reporting
-
-Low inventory alerts
-
-Product performance analysis
-
-Business intelligence dashboards
-
- Future Enhancements
-
-🔹 Add DataHub / Amundsen for metadata discovery
-
-🔹 Add CI/CD for dbt
-
-🔹 Add real-time streaming
-
-🔹 Add Power BI / Tableau dashboards
-
-🔹 Add Data Quality monitoring
-
- Author
-
-Raman Sharma
-GitHub: https://github.com/GLITCHINvision
-
+Raman Sharma  
+GitHub: https://github.com/GLITCHINvision  
 LeetCode: https://leetcode.com/u/hard_code7/
