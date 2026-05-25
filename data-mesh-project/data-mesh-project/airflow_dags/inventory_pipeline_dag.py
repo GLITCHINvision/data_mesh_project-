@@ -3,11 +3,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 
-# Simple example DAG to:
-# 1. run raw SQL setup / load for inventory
-# 2. trigger dbt run for the inventory domain
-# 3. trigger dbt test for the inventory domain
-
 default_args = {
     "owner": "data-mesh-inventory",
     "depends_on_past": False,
